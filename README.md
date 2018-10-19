@@ -2,7 +2,7 @@
 Provides a OpenAI-Gym-like environment on the online game Splix.io
 
 How to Setup up the env :
-```python
+```sh
 git clone https://github.com/M3g4lodon/gym-splix.git
 cd gym-splix
 pip install -e .
