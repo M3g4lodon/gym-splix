@@ -1,6 +1,12 @@
 # SplixEnvironment
 Provides a OpenAI-Gym-like environment on the online game Splix.io
 
+You need to install Gym and Selenium : 
+```sh
+pip install gym
+pip install selenium
+```
+
 How to Setup up the env :
 ```sh
 git clone https://github.com/M3g4lodon/gym-splix.git
@@ -13,8 +19,12 @@ To try it :
 import gym
 import gym_splix
 
+
+YOUR_FIREFOX_PATH="PATH\\TO\\FIREFOX"
+
 def run():
     env = gym.make("splix-online-v0")
+    env.firefox_path = YOUR_FIREFOX_PATH
     for _ in range(1):
         env.reset()
         while not env.done:
