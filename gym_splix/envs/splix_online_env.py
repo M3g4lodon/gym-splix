@@ -5,9 +5,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
+from selenium.webdriver.firefox.options import Options
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
+from scipy.misc import imread
 from gym import spaces, Env
 
 FIREFOX_PATH = 'C:\\Program Files\\Mozilla Firefox\\firefox.exe'
@@ -59,6 +61,8 @@ class SplixOnlineEnv(Env):
         self._kills = None
 
         self._observation = None
+
+        self.viewer=None
 
     ##########################
     #    Gym Env Methods
@@ -130,15 +134,36 @@ class SplixOnlineEnv(Env):
     def render(self, mode='human'):
         if mode == 'rgb_array':
             canvas = self._driver.find_element_by_id("mainCanvas")
-            canvas.screenshot("Screenshot/screenshot.png")
-            return mpimg.imread("Screenshot/screenshot.png")
-        else:
-            ...
-            # It's always on selenium (human mode)
+            canvas.screenshot("screenshot.png")
+            return imread("screenshot.png")
+        elif mode == 'human':
+            from gym.envs.classic_control import rendering
+            if self.viewer is None:
+                self.viewer = rendering.SimpleImageViewer()
+            canvas = self._driver.find_element_by_id("mainCanvas")
+            canvas.screenshot("screenshop.png")
+            self.viewer.imshow("screenshot.png")
+
+            # WIP to avoid writing image on disk
+            """array=np.fromstring(canvas.screenshot_as_png, dtype=np.uint8)
+
+            from png import Reader
+            png_reader=Reader(bytes=canvas.screenshot_as_png)
+            width, height, pixels, meta= png_reader.read()
+            pixels=np.array(list(map(np.uint16,pixels))).reshape((height,width,4))
+            # Removing alpha
+            mask = pixels[:,:,3]==255
+            print(mask.shape)
+            print(mask)
+            print(np.where(mask,pixels,np.array([255,255,255,255],dtype=np.uint8).reshape((None,None,4))))
+            self.viewer.imshow(pixels)"""
+        return self.viewer.isopen
 
     def close(self):
         if self._driver is not None:
             self._driver.quit()
+        if self.viewer is not None:
+            self.viewer.close()
 
     @property
     def done(self):
@@ -155,7 +180,9 @@ class SplixOnlineEnv(Env):
 
         # Create a new instance of the Firefox driver
         binary = FirefoxBinary(self.firefox_path)
-        self._driver = webdriver.Firefox(firefox_binary=binary)
+        firefox_options = Options()
+        firefox_options.headless=True
+        self._driver = webdriver.Firefox(firefox_binary=binary, firefox_options=firefox_options)
 
         # go to the splix.io home page
         self._driver.get("http://www.splix.io")
@@ -277,12 +304,12 @@ class SplixOnlineEnv(Env):
           var potential_blocks = blocks.filter(b => potential_block_id.has(b.currentBlock.toString()))
           var close_blocks = potential_blocks.filter(b => (Math.abs(b.x - x_FirstTrail) + Math.abs(b.y - y_FirstTrail)) == 1)
           for (var b in close_blocks) {
-            potential_blocks.add(b.currentBlock)
+            potential_block_id.add(b.currentBlock)
           }  // Removing block of first trail point
         
           forbiddenBlock = blocks.filter(b => (b.x == x_FirstTrail && b.y == y_FirstTrail))
           if (forbiddenBlock.length == 1) {
-            potential_blocks.delete (forbiddenBlock[0].currentBlock)
+            potential_block_id.delete(forbiddenBlock[0].currentBlock)
           }
           if (potential_block_id.size == 1) {
             return potential_block_id.values().next().value
@@ -379,7 +406,7 @@ class SplixOnlineEnv(Env):
 
     def plot_screenshot(self):
         canvas = self._driver.find_element_by_id("mainCanvas")
-        canvas.screenshot("Screenshot/screenshot.png")
+        canvas.screenshot("screenshot.png")
 
     def plot_state(self):
 
@@ -396,11 +423,11 @@ class SplixOnlineEnv(Env):
 
 
 if __name__ == '__main__':
-
     env = SplixOnlineEnv()
     for _ in range(1):
         env.reset()
         while not env.done:
+            env.render()
             env.step(env.action_space.sample())  # random action
-
         env.close()
+

@@ -1,4 +1,5 @@
 from collections import deque
+import time
 
 import numpy as np
 import random
@@ -13,7 +14,7 @@ from splix_online_env import SplixOnlineEnv
 # Adapted from https://gist.github.com/yashpatel5400/049fe6f4372b16bab5d3dab36854f262#file-mountaincar-py
 
 class DQN:
-    def __init__(self, env):
+    def __init__(self, env, reuse_model=False):
         self.env = env
         self.memory = deque(maxlen=2000)
 
@@ -26,15 +27,18 @@ class DQN:
 
         self.model = self.create_model()
         self.target_model = self.create_model()
+        if reuse_model:
+            self.model.load_weights("model.h5")
+            self.target_model.load_weights("target_model.h5")
 
     def create_model(self):
         model = Sequential()
         model.add(
             Conv2D(24, 7, activation="relu", data_format="channels_last", input_shape=self.env.observation_space.shape))
-        #model.add(Conv2D(24, 7, activation="relu", data_format="channels_last"))
+        model.add(Conv2D(24, 7, activation="relu", data_format="channels_last"))
         model.add(MaxPooling2D())
         model.add(Flatten())
-        #model.add(Dense(24, activation="relu"))
+        model.add(Dense(24, activation="relu"))
         model.add(Dense(self.env.action_space.n))
         model.compile(loss="mean_squared_error",
                       optimizer=Adam(lr=self.learning_rate))
@@ -45,7 +49,7 @@ class DQN:
         self.epsilon = max(self.epsilon_min, self.epsilon)
         if np.random.random() < self.epsilon:
             return self.env.action_space.sample()
-        return np.argmax(self.model.predict(state.reshape(1,51,51,6)))
+        return np.argmax(self.model.predict(state.reshape(1, 51, 51, 6)))
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.append([state, action, reward, new_state, done])
@@ -58,13 +62,13 @@ class DQN:
         samples = random.sample(self.memory, batch_size)
         for sample in samples:
             state, action, reward, new_state, done = sample
-            target = self.target_model.predict(state.reshape(1,51,51,6))
+            target = self.target_model.predict(state.reshape(1, 51, 51, 6))
             if done:
                 target[0][action] = reward
             else:
-                Q_future = max(self.target_model.predict(new_state.reshape(1,51,51,6))[0])
+                Q_future = max(self.target_model.predict(new_state.reshape(1, 51, 51, 6))[0])
                 target[0][action] = reward + Q_future * self.gamma
-            self.model.fit(state.reshape(1,51,51,6), target, epochs=1, verbose=0)
+            self.model.fit(state.reshape(1, 51, 51, 6), target, epochs=1, verbose=0)
 
     def target_train(self):
         weights = self.model.get_weights()
@@ -73,8 +77,9 @@ class DQN:
             target_weights[i] = weights[i] * self.tau + target_weights[i] * (1 - self.tau)
         self.target_model.set_weights(target_weights)
 
-    def save_model(self, fn):
-        self.model.save(fn)
+    def save_model(self):
+        self.model.save_weights("model.h5")
+        self.target_model.save_weights("target_model.h5")
 
 
 def main():
@@ -83,11 +88,11 @@ def main():
     trials = 1000
     trial_len = 500
 
-    # updateTargetNetwork = 1000
     dqn_agent = DQN(env=env)
 
     for trial in range(trials):
         cur_state = env.reset()
+        start = time.time()
         for step in range(trial_len):
 
             action = dqn_agent.act(cur_state)
@@ -101,8 +106,9 @@ def main():
             cur_state = new_state
             if done:
                 break
-        print(f"Trial {trial} : final score {info['score']} in {step+1} steps")
-    dqn_agent.model.save_weights("model.h5")
+        print(f"Trial {trial} : final score {info['score']} in {step+1} steps ({duration/(step+1):0.3f}s per step)")
+        dqn_agent.save_model()
+
 
 if __name__ == "__main__":
     main()
