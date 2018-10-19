@@ -141,8 +141,8 @@ class SplixOnlineEnv(Env):
             if self.viewer is None:
                 self.viewer = rendering.SimpleImageViewer()
             canvas = self._driver.find_element_by_id("mainCanvas")
-            canvas.screenshot("screenshop.png")
-            self.viewer.imshow("screenshot.png")
+            canvas.screenshot("screenshot.png")
+            self.viewer.imshow(imread("screenshot.png", mode='RGB'))
 
             # WIP to avoid writing image on disk
             """array=np.fromstring(canvas.screenshot_as_png, dtype=np.uint8)

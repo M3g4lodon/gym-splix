@@ -107,3 +107,4 @@ venv.bak/
 *.log
 *.h5
 *.png
+gym_splix.egg-info/
