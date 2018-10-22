@@ -25,12 +25,11 @@ YOUR_FIREFOX_PATH="PATH\\TO\\FIREFOX"
 def run():
     env = gym.make("splix-online-v0")
     env.firefox_path = YOUR_FIREFOX_PATH
-    for _ in range(1):
-        env.reset()
-        while not env.done:
-            env.render()
-            env.step(env.action_space.sample())  # random action
-        env.close()
+    env.reset()
+    while not env.done:
+        env.render()
+        env.step(env.action_space.sample())  # random action
+    env.close()
 
 if __name__ == '__main__':
     run()
