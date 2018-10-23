@@ -192,9 +192,13 @@ class SplixOnlineEnv(Env):
         input_name.send_keys(self.__PLAYER_NAME)
         input_name.submit()
 
-        element = WebDriverWait(self._driver, 10).until(
-            expected_conditions.visibility_of(play_u_i)
-        )
+        try :
+            element = WebDriverWait(self._driver, 10).until(
+                expected_conditions.visibility_of(play_u_i)
+            )
+        except:
+            self._driver.close()
+            self._launch_game()
 
         # We stop the player
         dom = self._driver.find_element_by_tag_name("html")
