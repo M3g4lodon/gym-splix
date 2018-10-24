@@ -9,9 +9,7 @@ pip install selenium
 
 How to Setup up the env :
 ```sh
-git clone https://github.com/M3g4lodon/gym-splix.git
-cd gym-splix
-pip install -e .
+pip install git+ .
 ```
 
 To try it :
