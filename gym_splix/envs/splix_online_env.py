@@ -9,7 +9,7 @@ from selenium.webdriver.firefox.options import Options
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import numpy as np
-from scipy.misc import imread
+from imageio import imread
 from gym import spaces, Env
 
 FIREFOX_PATH = 'C:\\Program Files\\Mozilla Firefox\\firefox.exe'
