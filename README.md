@@ -20,11 +20,8 @@ import gym
 import gym_splix
 
 
-YOUR_FIREFOX_PATH="PATH\\TO\\FIREFOX"
-
 def run():
     env = gym.make("splix-online-v0")
-    env.firefox_path = YOUR_FIREFOX_PATH
     env.reset()
     while not env.done:
         env.render()
