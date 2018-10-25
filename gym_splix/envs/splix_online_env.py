@@ -14,10 +14,9 @@ from gym import spaces, Env
 
 class DefaultDriver(webdriver.Firefox):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         firefox_options = Options()
         firefox_options.headless = True
-        self.firefox_options = firefox_options
+        super().__init__(firefox_options=firefox_options,*args, **kwargs)
 
 
 class SplixOnlineEnv(Env):
@@ -146,7 +145,7 @@ class SplixOnlineEnv(Env):
                 self.viewer = rendering.SimpleImageViewer()
             canvas = self._driver.find_element_by_id("mainCanvas")
             canvas.screenshot("screenshot.png")
-            self.viewer.imshow(imread("screenshot.png", mode='RGB'))
+            self.viewer.imshow(imread("screenshot.png", as_gray=False, pilmode="RGB"))
 
             # WIP to avoid writing image on disk
             """array=np.fromstring(canvas.screenshot_as_png, dtype=np.uint8)
