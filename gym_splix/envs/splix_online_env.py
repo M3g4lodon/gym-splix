@@ -4,15 +4,20 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.firefox.firefox_binary import FirefoxBinary
 from selenium.webdriver.firefox.options import Options
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
+
 import numpy as np
 from imageio import imread
 from gym import spaces, Env
 
-FIREFOX_PATH = 'C:\\Program Files\\Mozilla Firefox\\firefox.exe'
+
+class DefaultDriver(webdriver.Firefox):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        firefox_options = Options()
+        firefox_options.headless = True
+        self.firefox_options = firefox_options
 
 
 class SplixOnlineEnv(Env):
@@ -35,14 +40,13 @@ class SplixOnlineEnv(Env):
                                    dtype=np.bool)
     action_space = spaces.Discrete(len(__ACTIONS))
 
-    def __init__(self, firefox_path=FIREFOX_PATH):
+    def __init__(self, driver_class=DefaultDriver):
         """
 
-        :param firefox_path: your own firefox path
         """
         # driver
+        self._driver_class = driver_class
         self._driver = None
-        self.firefox_path=firefox_path
 
         # your info in the game
         self._my_block_id = None
@@ -62,7 +66,7 @@ class SplixOnlineEnv(Env):
 
         self._observation = None
 
-        self.viewer=None
+        self.viewer = None
 
     ##########################
     #    Gym Env Methods
@@ -179,10 +183,7 @@ class SplixOnlineEnv(Env):
         self._my_block_id = None
 
         # Create a new instance of the Firefox driver
-        binary = FirefoxBinary(self.firefox_path)
-        firefox_options = Options()
-        firefox_options.headless=True
-        self._driver = webdriver.Firefox(firefox_binary=binary, firefox_options=firefox_options)
+        self._driver = self._driver_class()
 
         # go to the splix.io home page
         self._driver.get("http://www.splix.io")
@@ -192,7 +193,7 @@ class SplixOnlineEnv(Env):
         input_name.send_keys(self.__PLAYER_NAME)
         input_name.submit()
 
-        try :
+        try:
             element = WebDriverWait(self._driver, 10).until(
                 expected_conditions.visibility_of(play_u_i)
             )
@@ -434,4 +435,3 @@ if __name__ == '__main__':
             env.render()
             env.step(env.action_space.sample())  # random action
         env.close()
-
